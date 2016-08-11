@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/gogap/errors"
-	"github.com/mreiferson/go-httpclient"
+	"github.com/lujiajing1126/ali_mns/httpclient"
 )
 
 const (
