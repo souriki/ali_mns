@@ -139,6 +139,7 @@ func (p *aliMNSClient) initClient() {
 		ConnectTimeout:        time.Second * 3,
 		RequestTimeout:        timeout,
 		ResponseHeaderTimeout: timeout + time.Second,
+		DisableKeepAlives: true,
 	}
 
 	p.client = &http.Client{Transport: transport}
