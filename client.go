@@ -14,6 +14,8 @@ import (
 
 	"github.com/gogap/errors"
 	"github.com/lujiajing1126/ali_mns/httpclient"
+	"golang.org/x/net/context"
+	"golang.org/x/net/context/ctxhttp"
 )
 
 const (
@@ -56,6 +58,9 @@ type MNSClient interface {
 
 	getAccountID() (accountId string)
 	getRegion() (region string)
+
+	GetContext() context.Context
+	GetCancelFunc() context.CancelFunc
 }
 
 type aliMNSClient struct {
@@ -68,6 +73,8 @@ type aliMNSClient struct {
 
 	accountId   string
 	region      string
+	ctx         context.Context
+	cancelFunc  context.CancelFunc
 
 	clientLocker sync.Mutex
 }
@@ -83,6 +90,7 @@ func NewAliMNSClient(url, accessKeyId, accessKeySecret string) MNSClient {
 	cli.credential = credential
 	cli.accessKeyId = accessKeyId
 	cli.url = url
+	cli.ctx, cli.cancelFunc = context.WithCancel(context.Background())
 
 	// 1. parse region and accountid
 	pieces := strings.Split(url, ".")
@@ -119,6 +127,14 @@ func (p *aliMNSClient) SetProxy(url string) {
 	}
 
 	p.proxyURL = url
+}
+
+func (p *aliMNSClient) GetContext() context.Context {
+	return p.ctx
+}
+
+func (p *aliMNSClient) GetCancelFunc() context.CancelFunc {
+	return p.cancelFunc
 }
 
 func (p *aliMNSClient) initClient() {
@@ -216,7 +232,7 @@ func (p *aliMNSClient) Send(method Method, headers map[string]string, message in
 		req.Header.Add(header, value)
 	}
 
-	if resp, err = p.client.Do(req); err != nil {
+	if resp, err = ctxhttp.Do(p.ctx,p.client,req); err != nil {
 		err = ERR_SEND_REQUEST_FAILED.New(errors.Params{"err": err})
 		return
 	}
