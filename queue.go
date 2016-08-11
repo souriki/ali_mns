@@ -74,18 +74,35 @@ func (p *MNSQueue) BatchSendMessage(messages ...MessageSendRequest) (resp BatchM
 
 func (p *MNSQueue) ReceiveMessage(respChan chan MessageReceiveResponse, errChan chan error, waitseconds ...int64) {
 	resource := fmt.Sprintf("queues/%s/%s", p.name, "messages")
-	if waitseconds != nil && len(waitseconds) == 1 && waitseconds[0] >= 0 {
-		resource = fmt.Sprintf("queues/%s/%s?waitseconds=%d", p.name, "messages", waitseconds[0])
-	}
-
-	p.qpsMonitor.checkQPS()
-	resp := MessageReceiveResponse{}
-	_, err := send(p.client, p.decoder, GET, nil, nil, resource, &resp)
-	if err != nil {
-		errChan <- err
+	if waitseconds != nil {
+		for _, waitsecond := range waitseconds {
+			if waitsecond <= 0 {
+				continue
+			}
+			resource = fmt.Sprintf("queues/%s/%s?waitseconds=%d", p.name, "messages", waitsecond)
+			p.qpsMonitor.checkQPS()
+			resp := MessageReceiveResponse{}
+			_, err := send(p.client, p.decoder, GET, nil, nil, resource, &resp)
+			if err != nil {
+				// if no 
+				errChan <- err
+			} else {
+				respChan <- resp
+				// return if success, may be too much msg accumulated
+				return
+			}
+		}
 	} else {
-		respChan <- resp
+		p.qpsMonitor.checkQPS()
+		resp := MessageReceiveResponse{}
+		_, err := send(p.client, p.decoder, GET, nil, nil, resource, &resp)
+		if err != nil {
+			errChan <- err
+		} else {
+			respChan <- resp
+		}
 	}
+	// if no message after waitsecond loop or after once try if no waitsecond offered
 	return
 }
 
@@ -95,17 +112,31 @@ func (p *MNSQueue) BatchReceiveMessage(respChan chan BatchMessageReceiveResponse
 	}
 
 	resource := fmt.Sprintf("queues/%s/%s?numOfMessages=%d", p.name, "messages", numOfMessages)
-	if waitseconds != nil && len(waitseconds) == 1 && waitseconds[0] >= 0 {
-		resource = fmt.Sprintf("queues/%s/%s?numOfMessages=%d&waitseconds=%d", p.name, "messages", numOfMessages, waitseconds[0])
-	}
-
-	p.qpsMonitor.checkQPS()
-	resp := BatchMessageReceiveResponse{}
-	_, err := send(p.client, p.decoder, GET, nil, nil, resource, &resp)
-	if err != nil {
-		errChan <- err
+	if waitseconds != nil {
+		for _, waitsecond := range waitseconds {
+			if waitsecond <= 0 {
+				continue
+			}
+			resource = fmt.Sprintf("queues/%s/%s?numOfMessages=%d&waitseconds=%d", p.name, "messages", numOfMessages, waitsecond)
+			p.qpsMonitor.checkQPS()
+			resp := BatchMessageReceiveResponse{}
+			_, err := send(p.client, p.decoder, GET, nil, nil, resource, &resp)
+			if err != nil {
+				errChan <- err
+			} else {
+				respChan <- resp
+				return
+			}
+		}
 	} else {
-		respChan <- resp
+		p.qpsMonitor.checkQPS()
+		resp := BatchMessageReceiveResponse{}
+		_, err := send(p.client, p.decoder, GET, nil, nil, resource, &resp)
+		if err != nil {
+			errChan <- err
+		} else {
+			respChan <- resp
+		}
 	}
 	return
 }
