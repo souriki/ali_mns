@@ -9,6 +9,7 @@ var (
 )
 
 type AliMNSQueue interface {
+	QPSMonitor() *QPSMonitor
 	Name() string
 	SendMessage(message MessageSendRequest) (resp MessageSendResponse, err error)
 	BatchSendMessage(messages ...MessageSendRequest) (resp BatchMessageSendResponse, err error)
@@ -45,6 +46,10 @@ func NewMNSQueue(name string, client MNSClient, qps ...int32) AliMNSQueue {
 	}
 	queue.qpsMonitor = NewQPSMonitor(5, qpsLimit)
 	return queue
+}
+
+func (p *MNSQueue) QPSMonitor() *QPSMonitor {
+	return p.qpsMonitor
 }
 
 func (p *MNSQueue) Name() string {
