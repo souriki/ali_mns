@@ -43,7 +43,6 @@ var (
 
 func init() {
 	initMNSErrors()
-	fasthttp.DefaultDNSCacheDuration = 10 * time.Minute
 }
 
 const (
