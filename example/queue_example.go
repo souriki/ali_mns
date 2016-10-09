@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"fmt"
-	"time"
 	_ "net/http/pprof"
 	"log"
 	"net/http"
@@ -35,7 +34,7 @@ func main() {
 		}
 	}
 
-	for i := 1 ; i < 100 ; i++ {
+	for i := 1 ; i < 1000 ; i++ {
 		client := ali_mns.NewAliMNSClient(conf.Url,
 			conf.AccessKeyId,
 			conf.AccessKeySecret)
@@ -95,6 +94,5 @@ func main() {
 
 		queue.ReceiveMessage(respChan, errChan, 30)
 		<-endChan
-		time.Sleep(3 * time.Second)
 	}
 }
