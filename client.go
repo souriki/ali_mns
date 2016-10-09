@@ -6,7 +6,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"net/http"
-	"net/url"
+	neturl "net/url"
 	"os"
 	"strings"
 	"bytes"
@@ -15,6 +15,7 @@ import (
 
 	"github.com/gogap/errors"
 	"github.com/valyala/fasthttp"
+	"github.com/miekg/dns"
 )
 
 const (
@@ -62,6 +63,7 @@ type MNSClient interface {
 type aliMNSClient struct {
 	Timeout     int64
 	url         string
+	host        string
 	credential  Credential
 	accessKeyId string
 	client      *fasthttp.Client
@@ -73,8 +75,8 @@ type aliMNSClient struct {
 	clientLocker sync.Mutex
 }
 
-func NewAliMNSClient(url, accessKeyId, accessKeySecret string) MNSClient {
-	if url == "" {
+func NewAliMNSClient(inputUrl, accessKeyId, accessKeySecret string) MNSClient {
+	if inputUrl == "" {
 		panic("ali-mns: message queue url is empty")
 	}
 
@@ -83,10 +85,16 @@ func NewAliMNSClient(url, accessKeyId, accessKeySecret string) MNSClient {
 	cli := new(aliMNSClient)
 	cli.credential = credential
 	cli.accessKeyId = accessKeyId
-	cli.url = url
+	cli.url = inputUrl
+
+	if uri, err := neturl.Parse(cli.url); err == nil {
+		cli.host = uri.Host
+	} else {
+		panic("err parse url")
+	}
 
 	// 1. parse region and accountid
-	pieces := strings.Split(url, ".")
+	pieces := strings.Split(inputUrl, ".")
 	if len(pieces) != 5 {
 		panic("ali-mns: message queue url is invalid")
 	}
@@ -103,7 +111,31 @@ func NewAliMNSClient(url, accessKeyId, accessKeySecret string) MNSClient {
 
     // 2. now init http client
 	cli.initFastHttpClient()
+
+	// 3. init resolve DNS
+	cli.resolveDNS()
+
 	return cli
+}
+
+func (p aliMNSClient) resolveDNS() {
+	config, _ := dns.ClientConfigFromFile("/etc/resolv.conf")
+	c := new(dns.Client)
+	m := new(dns.Msg)
+	m.SetQuestion(p.host, dns.TypeA)
+	m.RecursionDesired = true
+	r, _, err := c.Exchange(m, config.Servers[0]+":"+config.Port)
+	if err != nil {
+	    return
+	}
+	if r.Rcode != dns.RcodeSuccess {
+	    return
+	}
+	for _, ans := range r.Answer {
+	    if a, ok := ans.(*dns.A); ok {
+	        p.host = a.String()
+	    }
+	}
 }
 
 func (p aliMNSClient) getAccountID() (accountId string) {
@@ -137,9 +169,9 @@ func (p *aliMNSClient) initFastHttpClient() {
 	p.client = &fasthttp.Client{ReadTimeout: timeout, WriteTimeout: timeout}
 }
 
-func (p *aliMNSClient) proxy(req *http.Request) (*url.URL, error) {
+func (p *aliMNSClient) proxy(req *http.Request) (*neturl.URL, error) {
 	if p.proxyURL != "" {
-		return url.Parse(p.proxyURL)
+		return neturl.Parse(p.proxyURL)
 	}
 	return nil, nil
 }
