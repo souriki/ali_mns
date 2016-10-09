@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"fmt"
+	"time"
 	_ "net/http/pprof"
 	"log"
 	"net/http"
@@ -20,8 +21,10 @@ type appConf struct {
 
 func main() {
 	go func() {
-		log.Println(http.ListenAndServe("localhost:6060", nil))
+		log.Println(http.ListenAndServe("localhost:8080", nil))
 	}()
+
+
 	conf := appConf{}
 
 	if bFile, e := ioutil.ReadFile("app.conf"); e != nil {
@@ -32,61 +35,66 @@ func main() {
 		}
 	}
 
-	client := ali_mns.NewAliMNSClient(conf.Url,
-		conf.AccessKeyId,
-		conf.AccessKeySecret)
+	for i := 1 ; i < 100 ; i++ {
+		client := ali_mns.NewAliMNSClient(conf.Url,
+			conf.AccessKeyId,
+			conf.AccessKeySecret)
 
-	msg := ali_mns.MessageSendRequest{
-		MessageBody:  "hello <\"souriki/ali_mns\">",
-		DelaySeconds: 0,
-		Priority:     8}
+		msg := ali_mns.MessageSendRequest{
+			MessageBody:  "hello <\"souriki/ali_mns\">",
+			DelaySeconds: 0,
+			Priority:     8}
 
 
-	queueManager := ali_mns.NewMNSQueueManager(client)
-	err := queueManager.CreateSimpleQueue("test")
+		queueManager := ali_mns.NewMNSQueueManager(client)
 
-	if err != nil && !ali_mns.ERR_MNS_QUEUE_ALREADY_EXIST_AND_HAVE_SAME_ATTR.IsEqual(err) {
-		fmt.Println(err)
-		return
-	}
+	
+		err := queueManager.CreateSimpleQueue("test")
 
-	queue := ali_mns.NewMNSQueue("test", client)
-	ret, err := queue.SendMessage(msg)
+		if err != nil && !ali_mns.ERR_MNS_QUEUE_ALREADY_EXIST_AND_HAVE_SAME_ATTR.IsEqual(err) {
+			fmt.Println(err)
+			return
+		}
 
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		logs.Pretty("response:", ret)
-	}
+		queue := ali_mns.NewMNSQueue("test", client)
+		ret, err := queue.SendMessage(msg)
 
-	endChan := make(chan int)
-	respChan := make(chan ali_mns.MessageReceiveResponse)
-	errChan := make(chan error)
-	go func() {
-		select {
-		case resp := <-respChan:
-			{
-				logs.Pretty("response:", resp)
-				logs.Debug("change the visibility: ", resp.ReceiptHandle)
-				if ret, e := queue.ChangeMessageVisibility(resp.ReceiptHandle, 5); e != nil {
-					fmt.Println(e)
-				} else {
-					logs.Pretty("visibility changed", ret)
-					logs.Debug("delete it now: ", ret.ReceiptHandle)
-					if e := queue.DeleteMessage(ret.ReceiptHandle); e != nil {
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			logs.Pretty("response:", ret)
+		}
+
+		endChan := make(chan int)
+		respChan := make(chan ali_mns.MessageReceiveResponse)
+		errChan := make(chan error)
+		go func() {
+			select {
+			case resp := <-respChan:
+				{
+					logs.Pretty("response:", resp)
+					logs.Debug("change the visibility: ", resp.ReceiptHandle)
+					if ret, e := queue.ChangeMessageVisibility(resp.ReceiptHandle, 5); e != nil {
 						fmt.Println(e)
+					} else {
+						logs.Pretty("visibility changed", ret)
+						logs.Debug("delete it now: ", ret.ReceiptHandle)
+						if e := queue.DeleteMessage(ret.ReceiptHandle); e != nil {
+							fmt.Println(e)
+						}
+						endChan <- 1
 					}
+				}
+			case err := <-errChan:
+				{
+					fmt.Println(err)
 					endChan <- 1
 				}
 			}
-		case err := <-errChan:
-			{
-				fmt.Println(err)
-				endChan <- 1
-			}
-		}
-	}()
+		}()
 
-	queue.ReceiveMessage(respChan, errChan, 30)
-	<-endChan
+		queue.ReceiveMessage(respChan, errChan, 30)
+		<-endChan
+		time.Sleep(3 * time.Second)
+	}
 }
