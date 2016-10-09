@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"fmt"
+	_ "net/http/pprof"
+	"log"
+	"net/http"
 
-	"github.com/souriki/ali_mns"
+	"github.com/lujiajing1126/ali_mns"
 	"github.com/gogap/logs"
 )
 
@@ -16,6 +19,9 @@ type appConf struct {
 }
 
 func main() {
+	go func() {
+		log.Println(http.ListenAndServe("localhost:6060", nil))
+	}()
 	conf := appConf{}
 
 	if bFile, e := ioutil.ReadFile("app.conf"); e != nil {

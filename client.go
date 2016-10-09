@@ -28,7 +28,7 @@ const (
 )
 
 const (
-	version = "1.0.1"
+	version = "2015-06-06"
 )
 
 const (
