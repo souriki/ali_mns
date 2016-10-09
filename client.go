@@ -15,12 +15,12 @@ import (
 
 	"github.com/gogap/errors"
 	"github.com/valyala/fasthttp"
-	"github.com/miekg/dns"
 )
 
 const (
 	DefaultQueueQPSLimit      int32 = 2000
 	DefaultTopicQPSLimit      int32 = 2000
+	DefaultDNSTTL             int32 = 10
 )
 
 const (
@@ -62,8 +62,7 @@ type MNSClient interface {
 
 type aliMNSClient struct {
 	Timeout     int64
-	url         string
-	host        string
+	url         *neturl.URL
 	credential  Credential
 	accessKeyId string
 	client      *fasthttp.Client
@@ -85,11 +84,9 @@ func NewAliMNSClient(inputUrl, accessKeyId, accessKeySecret string) MNSClient {
 	cli := new(aliMNSClient)
 	cli.credential = credential
 	cli.accessKeyId = accessKeyId
-	cli.url = inputUrl
 
-	if uri, err := neturl.Parse(cli.url); err == nil {
-		cli.host = uri.Host
-	} else {
+	var err error
+	if cli.url, err = neturl.Parse(inputUrl); err != nil {
 		panic("err parse url")
 	}
 
@@ -112,30 +109,7 @@ func NewAliMNSClient(inputUrl, accessKeyId, accessKeySecret string) MNSClient {
     // 2. now init http client
 	cli.initFastHttpClient()
 
-	// 3. init resolve DNS
-	cli.resolveDNS()
-
 	return cli
-}
-
-func (p aliMNSClient) resolveDNS() {
-	config, _ := dns.ClientConfigFromFile("/etc/resolv.conf")
-	c := new(dns.Client)
-	m := new(dns.Msg)
-	m.SetQuestion(p.host, dns.TypeA)
-	m.RecursionDesired = true
-	r, _, err := c.Exchange(m, config.Servers[0]+":"+config.Port)
-	if err != nil {
-	    return
-	}
-	if r.Rcode != dns.RcodeSuccess {
-	    return
-	}
-	for _, ans := range r.Answer {
-	    if a, ok := ans.(*dns.A); ok {
-	        p.host = a.String()
-	    }
-	}
 }
 
 func (p aliMNSClient) getAccountID() (accountId string) {
@@ -228,7 +202,7 @@ func (p *aliMNSClient) Send(method Method, headers map[string]string, message in
 	}
 
 	var buffer bytes.Buffer
-	buffer.WriteString(p.url)
+	buffer.WriteString(p.url.String())
 	buffer.WriteString("/")
 	buffer.WriteString(resource)
 

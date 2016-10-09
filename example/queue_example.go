@@ -76,12 +76,12 @@ func main() {
 			select {
 			case resp := <-respChan:
 				{
-					logs.Pretty("response:", resp)
+					// logs.Pretty("response:", resp)
 					logs.Debug("change the visibility: ", resp.ReceiptHandle)
 					if ret, e := queue.ChangeMessageVisibility(resp.ReceiptHandle, 5); e != nil {
 						fmt.Println(e)
 					} else {
-						logs.Pretty("visibility changed", ret)
+						// logs.Pretty("visibility changed", ret)
 						logs.Debug("delete it now: ", ret.ReceiptHandle)
 						if e := queue.DeleteMessage(ret.ReceiptHandle); e != nil {
 							fmt.Println(e)
