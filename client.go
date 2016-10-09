@@ -122,29 +122,6 @@ func (p *aliMNSClient) SetProxy(url string) {
 	p.proxyURL = url
 }
 
-func (p *aliMNSClient) initClient() {
-	// p.clientLocker.Lock()
-	// defer p.clientLocker.Unlock()
-
-	// timeoutInt := DefaultTimeout
-
-	// if p.Timeout > 0 {
-	// 	timeoutInt = p.Timeout
-	// }
-
-	// timeout := time.Second * time.Duration(timeoutInt)
-
-	// transport := &httpclient.Transport{
-	// 	Proxy:                 p.proxy,
-	// 	ConnectTimeout:        time.Second * 3,
-	// 	RequestTimeout:        timeout,
-	// 	ResponseHeaderTimeout: timeout + time.Second,
-	// 	DisableKeepAlives: true,
-	// }
-
-	// p.client = &http.Client{Transport: transport}
-}
-
 func (p *aliMNSClient) initFastHttpClient() {
 	p.clientLocker.Lock()
 	defer p.clientLocker.Unlock()
