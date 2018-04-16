@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"fmt"
 
-	"github.com/souriki/ali_mns"
+	"github.com/aliyun-fc/ali_mns"
 	"github.com/gogap/logs"
 )
 
