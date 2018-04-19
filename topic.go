@@ -13,6 +13,7 @@ type AliMNSTopic interface {
 	Name() string
     GenerateQueueEndpoint(queueName string) string
     GenerateMailEndpoint(mailAddress string) string
+    GenerateExtendEndpoint(serviceName string, endpointUrl string) string
 
 	PublishMessage(message MessagePublishRequest) (resp MessageSendResponse, err error)
 
@@ -59,6 +60,13 @@ func (p *MNSTopic) GenerateQueueEndpoint(queueName string) string {
 
 func (p *MNSTopic) GenerateMailEndpoint(mailAddress string) string {
     return "mail:directmail:" + mailAddress
+}
+
+func (p *MNSTopic) GenerateExtendEndpoint(serviceName string, endpointUrl string) string {
+	var url string
+	url = strings.TrimPrefix(endpointUrl, "http://")
+	url = strings.TrimPrefix(endpointUrl, "https://")
+	return "extend:" + serviceName + ":" + url
 }
 
 func (p *MNSTopic) PublishMessage(message MessagePublishRequest) (resp MessageSendResponse, err error) {

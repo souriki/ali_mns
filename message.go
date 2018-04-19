@@ -6,15 +6,19 @@ import (
 )
 
 type notifyStrategyType string
+
 const (
     BACKOFF_RETRY            notifyStrategyType = "BACKOFF_RETRY"
 	EXPONENTIAL_DECAY_RETRY  notifyStrategyType = "EXPONENTIAL_DECAY_RETRY"
 )
 
 type notifyContentFormatType string
+
 const (
     XML          notifyContentFormatType  =  "XML"
 	SIMPLIFIED   notifyContentFormatType  =  "SIMPLIFIED"
+	JSON         notifyContentFormatType  =  "JSON"
+	STREAM       notifyContentFormatType  =  "STREAM"
 )
 
 type MessageResponse struct {
@@ -50,14 +54,18 @@ type MessagePublishRequest struct {
 type MessageAttributes struct {
 	XMLName           xml.Name          `xml:"MessageAttributes" json:"-"`
 	MailAttributes    *MailAttributes   `xml:"DirectMail,omitempty" json:"direct_mail,omitempty"`
+	ExtendAttributes  *ExtendAttributes `xml:"ExtendAttributes,omitempty" json:"fc event,omitempty"`
 }
 
 type messageAttributesXML struct {
 	XMLName           xml.Name            `xml:"MessageAttributes"`
 	MailAttributes    string              `xml:"DirectMail,omitempty"`
+	ExtendAttributes string               `xml:"Extend,omitempty"`
 }
+
 func (m *MessageAttributes) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 	mailAttributesStr := ""
+	extendAttributesStr := ""
 	if m.MailAttributes != nil {
 		mailAttributesByte, err := json.Marshal(m.MailAttributes)
 		if err != nil {
@@ -65,10 +73,18 @@ func (m *MessageAttributes) MarshalXML(e *xml.Encoder, start xml.StartElement) e
 		}
 		mailAttributesStr = string(mailAttributesByte)
 	}
-    n := &messageAttributesXML{
-        MailAttributes: mailAttributesStr,
-    }
-    return e.Encode(n)
+	if m.ExtendAttributes != nil {
+		extendAttributesByte, err := json.Marshal(m.ExtendAttributes)
+		if err != nil {
+			return err
+		}
+		extendAttributesStr = string(extendAttributesByte)
+	}
+	n := &messageAttributesXML{
+		MailAttributes:   mailAttributesStr,
+		ExtendAttributes: extendAttributesStr,
+	}
+	return e.Encode(n)
 }
 
 type MailAttributes struct {
@@ -78,6 +94,7 @@ type MailAttributes struct {
 	IsHtml         bool        `json:"IsHtml"`
 	ReplyToAddress int32       `json:"ReplyToAddress"`
 }
+
 func (m *MailAttributes) MarshalJSON() ([]byte, error) {
 	type Alias MailAttributes
 	isHtml := 0
@@ -91,6 +108,10 @@ func (m *MailAttributes) MarshalJSON() ([]byte, error) {
 		IsHtml:   isHtml,
 		Alias:    (*Alias)(m),
 	})
+}
+
+type ExtendAttributes struct {
+	Context string `json:"Context"`
 }
 
 type BatchMessageSendRequest struct {
@@ -109,6 +130,9 @@ type MessageSubsribeRequest struct {
 	FilterTag           string               `xml:"FilterTag,omitempty"`
 	NotifyStrategy      notifyStrategyType   `xml:"NotifyStrategy,omitempty"`
 	NotifyContentFormat notifyContentFormatType `xml:"NotifyContentFormat,omitempty"`
+	EndpointServiceName string                  `xml:"EndpointServiceName,omitempty"`
+	EndpointRoleName    string                  `xml:"EndpointRoleName,omitempty"`
+	EndpointCipherSet   string                  `xml:"EndpointCipherSet,omitempty"`
 }
 
 type MessageSendResponse struct {
@@ -151,7 +175,6 @@ type CreateQueueRequest struct {
 	MessageRetentionPeriod int32    `xml:"MessageRetentionPeriod,omitempty" json:"message_retention_period,omitempty"`
 	VisibilityTimeout      int32    `xml:"VisibilityTimeout,omitempty" json:"visibility_timeout,omitempty"`
 	PollingWaitSeconds     int32    `xml:"PollingWaitSeconds" json:"polling_wait_secods"`
-	Slices                 int32    `xml:"Slices" json:"slices"`
 }
 
 type CreateTopicRequest struct {
