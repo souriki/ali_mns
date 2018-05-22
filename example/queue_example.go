@@ -2,14 +2,22 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"fmt"
-	_ "net/http/pprof"
+	"io/ioutil"
 	"log"
 	"net/http"
+	_ "net/http/pprof"
+	"os"
+	"time"
 
-	"github.com/souriki/ali_mns"
 	"github.com/gogap/logs"
+	"github.com/souriki/ali_mns"
+)
+
+const (
+	// MNSTestTimeout : run `MNS_TEST_TIMEOUT=true go run queue_example.go` to enable timeout test
+	// should get lots of `timeout` in log.
+	MNSTestTimeout = "MNS_TEST_TIMEOUT"
 )
 
 type appConf struct {
@@ -22,7 +30,7 @@ func main() {
 	go func() {
 		log.Println(http.ListenAndServe("localhost:8080", nil))
 	}()
-
+	isTestTimeout := os.Getenv(MNSTestTimeout) != ""
 
 	conf := appConf{}
 
@@ -34,18 +42,22 @@ func main() {
 		}
 	}
 
-	client := ali_mns.NewAliMNSClient(conf.Url,
-		conf.AccessKeyId,
-		conf.AccessKeySecret)
+	var client ali_mns.MNSClient
+	if isTestTimeout {
+		client = ali_mns.NewAliMNSClient(conf.Url,
+			conf.AccessKeyId,
+			conf.AccessKeySecret,
+			ali_mns.Timeout(3))
+	} else {
+		client = ali_mns.NewAliMNSClient(conf.Url, conf.AccessKeyId, conf.AccessKeySecret)
+	}
 
 	msg := ali_mns.MessageSendRequest{
 		MessageBody:  "hello <\"souriki/ali_mns\">",
 		DelaySeconds: 0,
 		Priority:     8}
 
-
 	queueManager := ali_mns.NewMNSQueueManager(client)
-
 
 	err := queueManager.CreateQueue("test", 0, 65536, 345600, 30, 0, 3)
 
@@ -56,8 +68,13 @@ func main() {
 
 	queue := ali_mns.NewMNSQueue("test", client)
 
-	for i := 1 ; i < 10000 ; i++ {
-		_, err := queue.SendMessage(msg)
+	for i := 1; i < 10000; i++ {
+		var err error
+		if isTestTimeout {
+			_, err = queue.SendMessage(msg, ali_mns.RequestTimeout(10*time.Millisecond))
+		} else {
+			_, err = queue.SendMessage(msg)
+		}
 
 		go func() {
 			fmt.Println(queue.QPSMonitor().QPS())

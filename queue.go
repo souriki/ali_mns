@@ -2,7 +2,7 @@ package ali_mns
 
 import (
 	"fmt"
-    "net/url"
+	"net/url"
 )
 
 var (
@@ -12,7 +12,7 @@ var (
 type AliMNSQueue interface {
 	QPSMonitor() *QPSMonitor
 	Name() string
-	SendMessage(message MessageSendRequest) (resp MessageSendResponse, err error)
+	SendMessage(message MessageSendRequest, opts ...Option) (resp MessageSendResponse, err error)
 	BatchSendMessage(messages ...MessageSendRequest) (resp BatchMessageSendResponse, err error)
 	ReceiveMessage(respChan chan MessageReceiveResponse, errChan chan error, waitseconds ...int64)
 	BatchReceiveMessage(respChan chan BatchMessageReceiveResponse, errChan chan error, numOfMessages int32, waitseconds ...int64)
@@ -24,9 +24,9 @@ type AliMNSQueue interface {
 }
 
 type MNSQueue struct {
-	name          string
-	client        MNSClient
-	decoder       MNSDecoder
+	name    string
+	client  MNSClient
+	decoder MNSDecoder
 
 	qpsMonitor *QPSMonitor
 }
@@ -57,9 +57,9 @@ func (p *MNSQueue) Name() string {
 	return p.name
 }
 
-func (p *MNSQueue) SendMessage(message MessageSendRequest) (resp MessageSendResponse, err error) {
+func (p *MNSQueue) SendMessage(message MessageSendRequest, opts ...Option) (resp MessageSendResponse, err error) {
 	p.qpsMonitor.checkQPS()
-	_, err = send(p.client, p.decoder, POST, nil, message, fmt.Sprintf("queues/%s/%s", p.name, "messages"), &resp)
+	_, err = send(p.client, p.decoder, POST, nil, message, fmt.Sprintf("queues/%s/%s", p.name, "messages"), &resp, opts...)
 	return
 }
 
@@ -90,7 +90,7 @@ func (p *MNSQueue) ReceiveMessage(respChan chan MessageReceiveResponse, errChan 
 			resp := MessageReceiveResponse{}
 			_, err := send(p.client, p.decoder, GET, nil, nil, resource, &resp)
 			if err != nil {
-				// if no 
+				// if no
 				errChan <- err
 			} else {
 				respChan <- resp
