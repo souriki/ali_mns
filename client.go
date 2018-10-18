@@ -1,6 +1,7 @@
 package ali_mns
 
 import (
+	"bytes"
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/xml"
@@ -9,7 +10,6 @@ import (
 	neturl "net/url"
 	"os"
 	"strings"
-	"bytes"
 	"sync"
 	"time"
 
@@ -61,12 +61,13 @@ type MNSClient interface {
 }
 
 type aliMNSClient struct {
-	Timeout     int64
-	url         *neturl.URL
-	credential  Credential
-	accessKeyId string
-	client      *fasthttp.Client
-	proxyURL    string
+	Timeout       int64
+	url           *neturl.URL
+	credential    Credential
+	accessKeyId   string
+	SecurityToken string
+	client        *fasthttp.Client
+	proxyURL      string
 
 	accountId string
 	region    string
@@ -205,6 +206,10 @@ func (p *aliMNSClient) Send(method Method, headers map[string]string, message in
 		headers[AUTHORIZATION] = authHeader
 	}
 
+	if p.SecurityToken != "" {
+		headers[SECURITY_TOKEN] = p.SecurityToken
+	}
+
 	var buffer bytes.Buffer
 	buffer.WriteString(p.url.String())
 	buffer.WriteString("/")
@@ -262,12 +267,13 @@ func initMNSErrors() {
 		"TopicAlreadyExist":           ERR_MNS_TOPIC_ALREADY_EXIST,
 		"TopicNameLengthError":        ERR_MNS_TOPIC_NAME_LENGTH_ERROR,
 		"TopicNotExist":               ERR_MNS_TOPIC_NOT_EXIST,
-		"SubscriptionNameLengthError": ERR_MNS_SUBSRIPTION_NAME_LENGTH_ERROR,
+		"SubscriptionNameLengthError": ERR_MNS_SUBSCRIPTION_NAME_LENGTH_ERROR,
 		"TopicNameInvalid":            ERR_MNS_INVALID_TOPIC_NAME,
 		"SubsriptionNameInvalid":      ERR_MNS_INVALID_SUBSCRIPTION_NAME,
 		"SubscriptionAlreadyExist":    ERR_MNS_SUBSCRIPTION_ALREADY_EXIST,
 		"EndpointInvalid":             ERR_MNS_INVALID_ENDPOINT,
 		"SubscriberNotExist":          ERR_MNS_SUBSCRIBER_NOT_EXIST,
+		"SubscriptionNotExist":        ERR_MNS_SUBSCRIPTION_NOT_EXIST,
 	}
 }
 

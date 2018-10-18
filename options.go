@@ -15,8 +15,9 @@ const (
 )
 
 const (
-	optTimeout    = "Timeout"
-	optReqTimeout = "ReqTimeout"
+	optTimeout       = "Timeout"
+	optReqTimeout    = "ReqTimeout"
+	optSecurityToken = "SecurityToken"
 )
 
 type optionValue struct {
@@ -51,6 +52,17 @@ func RequestTimeout(d time.Duration) Option {
 	}
 }
 
+// SecurityToken ...
+func SecurityToken(securityToken string) Option {
+	return func(params optionParams) error {
+		params[optSecurityToken] = optionValue{
+			value: securityToken,
+			typ:   clientOption,
+		}
+		return nil
+	}
+}
+
 func initMNSClientOption(cli *aliMNSClient, opts ...Option) error {
 	params := optionParams{}
 	for _, opt := range opts {
@@ -61,6 +73,10 @@ func initMNSClientOption(cli *aliMNSClient, opts ...Option) error {
 	}
 	if optValue, ok := params[optTimeout]; ok && optValue.typ == clientOption {
 		cli.Timeout = optValue.value.(int64)
+	}
+
+	if optValue, ok := params[optSecurityToken]; ok && optValue.typ == clientOption {
+		cli.SecurityToken = optValue.value.(string)
 	}
 	return nil
 }
