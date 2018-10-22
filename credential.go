@@ -13,13 +13,14 @@ import (
 )
 
 const (
-	AUTHORIZATION = "Authorization"
-	CONTENT_TYPE  = "Content-Type"
-	CONTENT_MD5   = "Content-MD5"
-	MQ_VERSION    = "x-mns-version"
-	HOST          = "Host"
-	DATE          = "Date"
-	KEEP_ALIVE    = "Keep-Alive"
+	AUTHORIZATION  = "Authorization"
+	CONTENT_TYPE   = "Content-Type"
+	CONTENT_MD5    = "Content-MD5"
+	MQ_VERSION     = "x-mns-version"
+	HOST           = "Host"
+	DATE           = "Date"
+	KEEP_ALIVE     = "Keep-Alive"
+	SECURITY_TOKEN = "security-token"
 )
 
 type Credential interface {

@@ -53,18 +53,20 @@ var (
 	ERR_MNS_QPS_LIMIT_EXCEEDED           = errors.TN(ALI_MNS_ERR_NS, 134, ali_MNS_ERR_TEMPSTR)
 	ERR_MNS_UNKNOWN_CODE                 = errors.TN(ALI_MNS_ERR_NS, 135, ali_MNS_ERR_TEMPSTR)
 
-	ERR_MNS_TOPIC_NAME_LENGTH_ERROR      = errors.TN(ALI_MNS_ERR_NS, 200, ali_MNS_ERR_TEMPSTR)
-	ERR_MNS_SUBSRIPTION_NAME_LENGTH_ERROR= errors.TN(ALI_MNS_ERR_NS, 201, ali_MNS_ERR_TEMPSTR)
-	ERR_MNS_TOPIC_NOT_EXIST              = errors.TN(ALI_MNS_ERR_NS, 202, ali_MNS_ERR_TEMPSTR)
-	ERR_MNS_TOPIC_ALREADY_EXIST          = errors.TN(ALI_MNS_ERR_NS, 203, ali_MNS_ERR_TEMPSTR)
-	ERR_MNS_INVALID_TOPIC_NAME           = errors.TN(ALI_MNS_ERR_NS, 204, ali_MNS_ERR_TEMPSTR)
-	ERR_MNS_INVALID_SUBSCRIPTION_NAME    = errors.TN(ALI_MNS_ERR_NS, 205, ali_MNS_ERR_TEMPSTR)
-	ERR_MNS_SUBSCRIPTION_ALREADY_EXIST   = errors.TN(ALI_MNS_ERR_NS, 206, ali_MNS_ERR_TEMPSTR)
-	ERR_MNS_INVALID_ENDPOINT             = errors.TN(ALI_MNS_ERR_NS, 207, ali_MNS_ERR_TEMPSTR)
-	ERR_MNS_SUBSCRIBER_NOT_EXIST         = errors.TN(ALI_MNS_ERR_NS, 211, ali_MNS_ERR_TEMPSTR)
+	ERR_MNS_TOPIC_NAME_LENGTH_ERROR        = errors.TN(ALI_MNS_ERR_NS, 200, ali_MNS_ERR_TEMPSTR)
+	ERR_MNS_SUBSCRIPTION_NAME_LENGTH_ERROR = errors.TN(ALI_MNS_ERR_NS, 201, ali_MNS_ERR_TEMPSTR)
+	ERR_MNS_TOPIC_NOT_EXIST                = errors.TN(ALI_MNS_ERR_NS, 202, ali_MNS_ERR_TEMPSTR)
+	ERR_MNS_TOPIC_ALREADY_EXIST            = errors.TN(ALI_MNS_ERR_NS, 203, ali_MNS_ERR_TEMPSTR)
+	ERR_MNS_INVALID_TOPIC_NAME             = errors.TN(ALI_MNS_ERR_NS, 204, ali_MNS_ERR_TEMPSTR)
+	ERR_MNS_INVALID_SUBSCRIPTION_NAME      = errors.TN(ALI_MNS_ERR_NS, 205, ali_MNS_ERR_TEMPSTR)
+	ERR_MNS_SUBSCRIPTION_ALREADY_EXIST     = errors.TN(ALI_MNS_ERR_NS, 206, ali_MNS_ERR_TEMPSTR)
+	ERR_MNS_INVALID_ENDPOINT               = errors.TN(ALI_MNS_ERR_NS, 207, ali_MNS_ERR_TEMPSTR)
+	ERR_MNS_SUBSCRIBER_NOT_EXIST           = errors.TN(ALI_MNS_ERR_NS, 211, ali_MNS_ERR_TEMPSTR)
+	ERR_MNS_SUBSCRIPTION_NOT_EXIST         = errors.TN(ALI_MNS_ERR_NS, 212, ali_MNS_ERR_TEMPSTR)
 
 	ERR_MNS_TOPIC_NAME_IS_TOO_LONG                 = errors.TN(ALI_MNS_ERR_NS, 208, "topic name is too long, the max length is 256")
 	ERR_MNS_TOPIC_ALREADY_EXIST_AND_HAVE_SAME_ATTR = errors.TN(ALI_MNS_ERR_NS, 209, "mns topic already exist, and the attribute is the same, topic name: {{.name}}")
+
 	ERR_MNS_SUBSCRIPTION_ALREADY_EXIST_AND_HAVE_SAME_ATTR = errors.TN(ALI_MNS_ERR_NS, 210, "mns subscription already exist, and the attribute is the same, subscription name: {{.name}}")
 
 	ERR_MNS_QUEUE_NAME_IS_TOO_LONG                 = errors.TN(ALI_MNS_ERR_NS, 126, "queue name is too long, the max length is 256")
@@ -76,4 +78,7 @@ var (
 	ERR_MNS_RET_NUMBER_RANGE_ERROR                 = errors.TN(ALI_MNS_ERR_NS, 132, "list param of ret number is not in range of (1~1000)")
 	ERR_MNS_QUEUE_ALREADY_EXIST_AND_HAVE_SAME_ATTR = errors.TN(ALI_MNS_ERR_NS, 133, "mns queue already exist, and the attribute is the same, queue name: {{.name}}")
 	ERR_MNS_BATCH_OP_FAIL                          = errors.TN(ALI_MNS_ERR_NS, 136, "mns queue batch operation fail")
+
+	// ERR_MNS_SUBSRIPTION_NAME_LENGTH_ERROR: discarded because of  typo
+	ERR_MNS_SUBSRIPTION_NAME_LENGTH_ERROR = ERR_MNS_SUBSCRIPTION_NAME_LENGTH_ERROR
 )
