@@ -18,7 +18,7 @@ func (p *QPSMonitor) Pulse() {
 }
 
 func (p *QPSMonitor) Update() int32 {
-	index := int32(now().Second()) % p.delaySecond
+	index := int32(time.Now().Second()) % p.delaySecond
 
 	if p.latestIndex != index {
 		atomic.StoreInt32(&p.latestIndex, index)
