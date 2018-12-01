@@ -269,7 +269,7 @@ func initMNSErrors() {
 		"TopicNotExist":               ERR_MNS_TOPIC_NOT_EXIST,
 		"SubscriptionNameLengthError": ERR_MNS_SUBSCRIPTION_NAME_LENGTH_ERROR,
 		"TopicNameInvalid":            ERR_MNS_INVALID_TOPIC_NAME,
-		"SubsriptionNameInvalid":      ERR_MNS_INVALID_SUBSCRIPTION_NAME,
+		"SubscriptionNameInvalid":     ERR_MNS_INVALID_SUBSCRIPTION_NAME,
 		"SubscriptionAlreadyExist":    ERR_MNS_SUBSCRIPTION_ALREADY_EXIST,
 		"EndpointInvalid":             ERR_MNS_INVALID_ENDPOINT,
 		"SubscriberNotExist":          ERR_MNS_SUBSCRIBER_NOT_EXIST,
