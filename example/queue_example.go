@@ -47,9 +47,10 @@ func main() {
 		client = ali_mns.NewAliMNSClient(conf.Url,
 			conf.AccessKeyId,
 			conf.AccessKeySecret,
-			ali_mns.Timeout(3))
+			ali_mns.Timeout(3),
+			ali_mns.MaxConns(10240))
 	} else {
-		client = ali_mns.NewAliMNSClient(conf.Url, conf.AccessKeyId, conf.AccessKeySecret)
+		client = ali_mns.NewAliMNSClient(conf.Url, conf.AccessKeyId, conf.AccessKeySecret, ali_mns.MaxConns(10240))
 	}
 
 	msg := ali_mns.MessageSendRequest{
