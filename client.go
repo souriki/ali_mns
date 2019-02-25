@@ -68,6 +68,7 @@ type aliMNSClient struct {
 	SecurityToken string
 	client        *fasthttp.Client
 	proxyURL      string
+	maxConnsSize  int
 
 	accountId string
 	region    string
@@ -145,7 +146,7 @@ func (p *aliMNSClient) initFastHttpClient() {
 
 	timeout := time.Second * time.Duration(timeoutInt)
 
-	p.client = &fasthttp.Client{ReadTimeout: timeout, WriteTimeout: timeout}
+	p.client = &fasthttp.Client{ReadTimeout: timeout, WriteTimeout: timeout, MaxConnsPerHost: p.maxConnsSize}
 }
 
 func (p *aliMNSClient) proxy(req *http.Request) (*neturl.URL, error) {

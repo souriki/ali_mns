@@ -2,6 +2,7 @@ package ali_mns
 
 import (
 	"time"
+	"fmt"
 
 	"github.com/gogap/errors"
 	"github.com/valyala/fasthttp"
@@ -12,12 +13,15 @@ type optionType string
 const (
 	clientOption  optionType = "clientOption"
 	requestOption optionType = "requestOption"
+
+	maxConnsSizeLimit = int(1 << 15)
 )
 
 const (
 	optTimeout       = "Timeout"
 	optReqTimeout    = "ReqTimeout"
 	optSecurityToken = "SecurityToken"
+	optMaxConns      = "MaxConns"
 )
 
 type optionValue struct {
@@ -52,6 +56,20 @@ func RequestTimeout(d time.Duration) Option {
 	}
 }
 
+// MaxConns ...
+func MaxConns(maxConnsSize int) Option {
+	return func(params optionParams) error {
+		if maxConnsSize <= 0 || maxConnsSize >= maxConnsSizeLimit {
+			return fmt.Errorf("maxConnsSize should be in range of (0, %d)", maxConnsSizeLimit)
+		}
+		params[optMaxConns] = optionValue{
+			value: maxConnsSize,
+			typ:   clientOption,
+		}
+		return nil
+	}
+}
+
 // SecurityToken ...
 func SecurityToken(securityToken string) Option {
 	return func(params optionParams) error {
@@ -77,6 +95,9 @@ func initMNSClientOption(cli *aliMNSClient, opts ...Option) error {
 
 	if optValue, ok := params[optSecurityToken]; ok && optValue.typ == clientOption {
 		cli.SecurityToken = optValue.value.(string)
+	}
+	if optValue, ok := params[optMaxConns]; ok && optValue.typ == clientOption {
+		cli.maxConnsSize = optValue.value.(int)
 	}
 	return nil
 }
