@@ -1,14 +1,14 @@
 package ali_mns
 
 import (
+	"bytes"
 	"encoding/xml"
 	"io"
-	"bytes"
 )
 
 type MNSDecoder interface {
 	Decode(reader io.Reader, v interface{}) (err error)
-	DecodeError(bodyBytes []byte, resource string) (decodedError error, err error)
+	DecodeError(requestID string, bodyBytes []byte, resource string) (decodedError error, err error)
 
 	Test() bool
 }
@@ -39,10 +39,11 @@ func (p *aliMNSDecoder) Decode(reader io.Reader, v interface{}) (err error) {
 	return
 }
 
-func (p *aliMNSDecoder) DecodeError(bodyBytes []byte, resource string) (decodedError error, err error) {
+func (p *aliMNSDecoder) DecodeError(requestID string, bodyBytes []byte, resource string) (decodedError error, err error) {
 	bodyReader := bytes.NewReader(bodyBytes)
-	errResp := ErrorResponse{}
-
+	errResp := ErrorResponse{
+		RequestId: requestID,
+	}
 	decoder := xml.NewDecoder(bodyReader)
 	err = decoder.Decode(&errResp)
 	if err == nil {
@@ -52,7 +53,7 @@ func (p *aliMNSDecoder) DecodeError(bodyBytes []byte, resource string) (decodedE
 }
 
 func NewBatchOpDecoder(v interface{}) MNSDecoder {
-	return &batchOpDecoder{v:v,}
+	return &batchOpDecoder{v: v}
 }
 
 func (p *batchOpDecoder) Decode(reader io.Reader, v interface{}) (err error) {
@@ -66,14 +67,16 @@ func (p *batchOpDecoder) Decode(reader io.Reader, v interface{}) (err error) {
 	return
 }
 
-func (p *batchOpDecoder) DecodeError(bodyBytes []byte, resource string) (decodedError error, err error) {
+func (p *batchOpDecoder) DecodeError(requestID string, bodyBytes []byte, resource string) (decodedError error, err error) {
 	bodyReader := bytes.NewReader(bodyBytes)
 
 	decoder := xml.NewDecoder(bodyReader)
 	err = decoder.Decode(&p.v)
 	if err != nil {
 		bodyReader.Seek(0, 0)
-		errResp := ErrorResponse{}
+		errResp := ErrorResponse{
+			RequestId: requestID,
+		}
 		err = decoder.Decode(&errResp)
 		if err == nil {
 			decodedError = ParseError(errResp, resource)

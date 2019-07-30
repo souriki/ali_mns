@@ -21,19 +21,23 @@ const (
 	STREAM     NotifyContentFormatType = "STREAM"
 )
 
+type requestIDSetter interface {
+	SetRequestID(reqID string)
+}
+
 type MessageResponse struct {
+	RequestID string
 	XMLName   xml.Name `xml:"Message" json:"-"`
 	Code      string   `xml:"Code,omitempty" json:"code,omitempty"`
 	Message   string   `xml:"Message,omitempty" json:"message,omitempty"`
-	RequestId string   `xml:"RequestId,omitempty" json:"request_id,omitempty"`
 	HostId    string   `xml:"HostId,omitempty" json:"host_id,omitempty"`
 }
 
 type ErrorResponse struct {
+	RequestId string   `xml:"RequestId,omitempty" json:"request_id,omitempty"`
 	XMLName   xml.Name `xml:"Error" json:"-"`
 	Code      string   `xml:"Code,omitempty" json:"code,omitempty"`
 	Message   string   `xml:"Message,omitempty" json:"message,omitempty"`
-	RequestId string   `xml:"RequestId,omitempty" json:"request_id,omitempty"`
 	HostId    string   `xml:"HostId,omitempty" json:"host_id,omitempty"`
 }
 
@@ -135,12 +139,18 @@ type MessageSubsribeRequest struct {
 	EndpointCipherSet   string                  `xml:"EndpointCipherSet,omitempty"`
 }
 
+var _ requestIDSetter = &MessageSendResponse{}
+
 type MessageSendResponse struct {
 	MessageResponse
 	MessageId      string `xml:"MessageId" json:"message_id"`
 	MessageBodyMD5 string `xml:"MessageBodyMD5" json:"message_body_md5"`
 	// ReceiptHandle is assigned when any DelayMessage is sent
 	ReceiptHandle string `xml:"ReceiptHandle,omitempty"`
+}
+
+func (r *MessageSendResponse) SetRequestID(reqID string) {
+	r.RequestID = reqID
 }
 
 type BatchMessageSendEntry struct {
@@ -151,9 +161,16 @@ type BatchMessageSendEntry struct {
 	MessageBodyMD5 string   `xml:"MessageBodyMD5,omitempty" json:"message_body_md5,omitempty"`
 }
 
+var _ requestIDSetter = &BatchMessageSendResponse{}
+
 type BatchMessageSendResponse struct {
-	XMLName  xml.Name                `xml:"Messages" json:"-"`
-	Messages []BatchMessageSendEntry `xml:"Message" json:"messages"`
+	RequestID string
+	XMLName   xml.Name                `xml:"Messages" json:"-"`
+	Messages  []BatchMessageSendEntry `xml:"Message" json:"messages"`
+}
+
+func (r *BatchMessageSendResponse) SetRequestID(reqID string) {
+	r.RequestID = reqID
 }
 
 type MessageDeleteFailEntry struct {
@@ -163,9 +180,16 @@ type MessageDeleteFailEntry struct {
 	ReceiptHandle string   `xml:"ReceiptHandle,omitempty" json:"receipt_handle"`
 }
 
+var _ requestIDSetter = &BatchMessageDeleteErrorResponse{}
+
 type BatchMessageDeleteErrorResponse struct {
+	RequestID      string
 	XMLName        xml.Name                 `xml:"Errors" json:"-"`
 	FailedMessages []MessageDeleteFailEntry `xml:"Error" json:"errors"`
+}
+
+func (r *BatchMessageDeleteErrorResponse) SetRequestID(reqID string) {
+	r.RequestID = reqID
 }
 
 type CreateQueueRequest struct {
@@ -184,7 +208,10 @@ type CreateTopicRequest struct {
 	LoggingEnabled bool     `xml:"LoggingEnabled" json:"logging_enabled"`
 }
 
+var _ requestIDSetter = &MessageReceiveResponse{}
+
 type MessageReceiveResponse struct {
+	RequestID string
 	MessageResponse
 	MessageId        string `xml:"MessageId" json:"message_id"`
 	ReceiptHandle    string `xml:"ReceiptHandle" json:"receipt_handle"`
@@ -197,15 +224,33 @@ type MessageReceiveResponse struct {
 	Priority         int64  `xml:"Priority" json:"priority"`
 }
 
-type BatchMessageReceiveResponse struct {
-	XMLName  xml.Name                 `xml:"Messages" json:"-"`
-	Messages []MessageReceiveResponse `xml:"Message" json:"messages"`
+func (r *MessageReceiveResponse) SetRequestID(reqID string) {
+	r.RequestID = reqID
 }
 
+var _ requestIDSetter = &BatchMessageReceiveResponse{}
+
+type BatchMessageReceiveResponse struct {
+	RequestID string
+	XMLName   xml.Name                 `xml:"Messages" json:"-"`
+	Messages  []MessageReceiveResponse `xml:"Message" json:"messages"`
+}
+
+func (r *BatchMessageReceiveResponse) SetRequestID(reqID string) {
+	r.RequestID = reqID
+}
+
+var _ requestIDSetter = &MessageVisibilityChangeResponse{}
+
 type MessageVisibilityChangeResponse struct {
+	RequestID       string
 	XMLName         xml.Name `xml:"ChangeVisibility" json:"-"`
 	ReceiptHandle   string   `xml:"ReceiptHandle" json:"receipt_handle"`
 	NextVisibleTime int64    `xml:"NextVisibleTime" json:"next_visible_time"`
+}
+
+func (r *MessageVisibilityChangeResponse) SetRequestID(reqID string) {
+	r.RequestID = reqID
 }
 
 type QueueAttribute struct {
